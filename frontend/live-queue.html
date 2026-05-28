@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMS - Waiting Room Display Board</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #02040a;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .board-header {
+            background: linear-gradient(90deg, #0f172a 0%, #020617 100%);
+            border-bottom: 3px solid var(--primary);
+            padding: 1.5rem 2rem;
+            z-index: 10;
+        }
+        .display-main-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+        }
+        .display-main-card.calling-active {
+            animation: borderFlash 1.5s infinite alternate;
+        }
+        @keyframes borderFlash {
+            0% { border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+            100% { border-color: var(--primary); box-shadow: 0 0 40px var(--primary-glow); }
+        }
+        .token-large-text {
+            font-size: 8.5rem;
+            font-weight: 850;
+            line-height: 1;
+            background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 50px rgba(124, 58, 237, 0.35);
+        }
+        .counter-badge-large {
+            font-size: 2.75rem;
+            font-weight: 800;
+            color: var(--accent);
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+        .sub-grid-item {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition-smooth);
+        }
+        .sub-grid-item.called-active {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+            animation: pulseBg 1s infinite alternate;
+        }
+        @keyframes pulseBg {
+            0% { background: rgba(15, 23, 42, 0.5); }
+            100% { background: rgba(13, 148, 136, 0.15); }
+        }
+        .ticker-container {
+            background: #090d16;
+            border-top: 1px solid var(--glass-border);
+            padding: 1rem 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: ticker 25s linear infinite;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .ticker-text strong {
+            color: var(--primary);
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation Display -->
+    <header class="board-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <span class="fs-2 fw-extrabold text-primary"><i class="fas fa-broadcast-tower"></i> QMS DISPLAY</span>
+            <select id="boardBranchSelector" class="glass-btn py-1 px-3 border border-secondary border-opacity-10 text-main small" style="border-radius:8px;">
+                <!-- Branches dynamically loaded -->
+            </select>
+        </div>
+        <div class="d-flex align-items-center gap-4">
+            <div class="sound-panel-status d-flex align-items-center gap-2">
+                <i class="fas fa-volume-up text-primary"></i> 
+                <span>TTS Voice: <strong class="text-success" id="boardVoiceStatus">ENABLED</strong></span>
+            </div>
+            <div class="fs-3 fw-bold text-muted" id="boardClock">19:55</div>
+            <a href="index.html" class="glass-btn py-2 px-3 small border-secondary">
+                <i class="fas fa-home"></i> Back
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Screens Grid -->
+    <main class="container-fluid flex-grow-1 py-4 px-lg-5 d-flex align-items-center">
+        <div class="row w-100 g-4">
+            
+            <!-- Now Serving Large Block -->
+            <div class="col-lg-7 d-flex flex-column justify-content-center">
+                <div class="display-main-card h-100" id="mainDisplayCard">
+                    <span class="badge bg-opacity-20 border px-4 py-2 mb-2 d-none" id="mainPriorityBadge" style="font-size: 1.1rem; border-radius: 20px;">Elderly Priority</span>
+                    <span class="text-muted text-uppercase fw-bold tracking-widest fs-4 mb-3">Now Serving</span>
+                    <h1 class="token-large-text my-2" id="mainTokenNum">---</h1>
+                    <span class="counter-badge-large mt-3" id="mainCounterNum">Please wait for next call</span>
+                    
+                    <!-- Wave visualizer inside card -->
+                    <div class="speech-wave mt-4 d-none" id="tvAudioWave">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counter Columns grid -->
+            <div class="col-lg-5">
+                <div class="glass-panel p-4 h-100">
+                    <h3 class="fw-bold mb-4 text-center border-bottom pb-2 border-secondary border-opacity-10">Queue Counters</h3>
+                    <div class="d-flex flex-column gap-3" id="sideCountersList">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Scrolling Ticker tape -->
+    <footer class="ticker-container">
+        <div class="ticker-text">
+            Welcome to the <strong>Divisional Secretariat Queue Management System</strong>. Please look at the display board to monitor token turns. 
+            Services include: <strong>Birth, Marriage & Death Certificates, Land Services, Samurdhi, NIC, Permit Requests, and Grama Niladhari Meetings</strong>. 
+            Ensure your document packets are ready before your number is called. Thank you.
+        </div>
+    </footer>
+
+    <!-- Audio Announcement Chime -->
+    <audio id="chimeAudio" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav" preload="auto"></audio>
+
+    <!-- Core Scripts -->
+    <script src="js/app.js"></script>
+    <script>
+        let lastCalledToken = "";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initBoardUI();
+
+            // Watch database changes
+            window.addEventListener('qmsStateUpdated', () => {
+                updateBoardDisplay();
+            });
+
+            // Ticking clock
+            setInterval(() => {
+                const clock = document.getElementById('boardClock');
+                if (clock) {
+                    const now = new Date();
+                    clock.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+            }, 1000);
+        });
+
+        function initBoardUI() {
+            const db = window.qms.getDB();
+            const selector = document.getElementById('boardBranchSelector');
+            
+            if (selector) {
+                selector.innerHTML = db.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+                selector.addEventListener('change', () => {
+                    updateBoardDisplay();
+                });
+            }
+
+            updateBoardDisplay();
+        }
+
+        function updateBoardDisplay() {
+            const db = window.qms.getDB();
+            const branchId = document.getElementById('boardBranchSelector').value;
+
+            // Find current active serving tickets at this branch
+            const servingTickets = db.tickets.filter(t => t.branchId === branchId && t.status === 'Serving')
+                .sort((a,b) => new Date(b.timeCreated) - new Date(a.timeCreated)); // most recent first
+
+            const mainCard = document.getElementById('mainDisplayCard');
+            const mainToken = document.getElementById('mainTokenNum');
+            const mainCounter = document.getElementById('mainCounterNum');
+
+            if (servingTickets.length > 0) {
+                const topTicket = servingTickets[0];
+                
+                mainToken.innerText = topTicket.number;
+                mainCounter.innerText = topTicket.counter || 'Counter';
+
+                // Display priority badge on the main display card
+                const pBadgeEl = document.getElementById('mainPriorityBadge');
+                if (pBadgeEl) {
+                    const pGroup = topTicket.priorityGroup || 'Regular';
+                    if (pGroup !== 'Regular') {
+                        pBadgeEl.innerText = `${pGroup} Priority`;
+                        pBadgeEl.classList.remove('d-none');
+                        let pColor = "#94a3b8";
+                        if (pGroup === 'Emergency') pColor = "#ef4444";
+                        else if (pGroup === 'Disabled') pColor = "#f59e0b";
+                        else if (pGroup === 'Elderly') pColor = "#06b6d4";
+                        else if (pGroup === 'VIP') pColor = "#8b5cf6";
+                        pBadgeEl.style.color = pColor;
+                        pBadgeEl.style.borderColor = pColor + "50";
+                    } else {
+                        pBadgeEl.classList.add('d-none');
+                    }
+                }
+
+                // Check if this is a newly called number
+                if (topTicket.number !== lastCalledToken) {
+                    lastCalledToken = topTicket.number;
+                    triggerAlertEffects(topTicket.number, topTicket.counter);
+                }
+            } else {
+                mainToken.innerText = "---";
+                mainCounter.innerText = "Please wait for next call";
+                const pBadgeEl = document.getElementById('mainPriorityBadge');
+                if (pBadgeEl) pBadgeEl.classList.add('d-none');
+            }
+
+            // Fill side counter profiles
+            const sideList = document.getElementById('sideCountersList');
+            if (sideList) {
+                sideList.innerHTML = db.counters.map(c => {
+                    const isActive = c.currentTicket && servingTickets.some(t => t.number === c.currentTicket);
+                    const ticket = db.tickets.find(t => t.number === c.currentTicket && t.status === 'Serving');
+                    
+                    let pBadge = "";
+                    if (ticket && ticket.priorityGroup && ticket.priorityGroup !== 'Regular') {
+                        let pColor = "#94a3b8";
+                        if (ticket.priorityGroup === 'Emergency') pColor = "#ef4444";
+                        else if (ticket.priorityGroup === 'Disabled') pColor = "#f59e0b";
+                        else if (ticket.priorityGroup === 'Elderly') pColor = "#06b6d4";
+                        else if (ticket.priorityGroup === 'VIP') pColor = "#8b5cf6";
+                        pBadge = `<span style="font-size: 0.65rem; color: ${pColor}; font-weight: bold; border: 1px solid ${pColor}50; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">${ticket.priorityGroup}</span>`;
+                    }
+
+                    return `
+                        <div class="sub-grid-item ${isActive ? 'called-active' : ''}">
+                            <div>
+                                <h5 class="fw-bold mb-0 text-muted">${c.name}</h5>
+                                <small class="text-muted">${c.agent}</small>
+                            </div>
+                            <div class="d-flex flex-column align-items-end">
+                                <div class="fs-2 fw-extrabold text-primary">${c.currentTicket || '---'}</div>
+                                ${pBadge}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function triggerAlertEffects(token, counter) {
+            // Play chime audio
+            const chime = document.getElementById('chimeAudio');
+            if (chime) {
+                chime.volume = 0.6;
+                chime.play().catch(e => console.log("Chime autoplay blocked by browser policy. Wait for user action."));
+            }
+
+            // Flash primary colors
+            const mainCard = document.getElementById('mainDisplayCard');
+            mainCard.classList.add('calling-active');
+            
+            const wave = document.getElementById('tvAudioWave');
+            if (wave) wave.classList.remove('d-none');
+
+            setTimeout(() => {
+                mainCard.classList.remove('calling-active');
+                if (wave) wave.classList.add('d-none');
+            }, 6000);
+
+            // Synthesize Speech announcement
+            window.qms.triggerVocalAnnouncement(token, counter);
+        }
+    </script>
+</body>
+</html>

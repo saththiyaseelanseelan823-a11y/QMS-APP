@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMS - Admin Management Center</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <!-- Wallpaper Overlay for background effects -->
+    <div class="auth-bg-overlay"></div>
+
+    <div class="admin-layout">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="glass-sidebar" id="sidebarMenu">
+            <div>
+                <!-- Brand logo -->
+                <div class="nav-brand-text mb-4 fs-3">
+                    <i class="fas fa-layer-group"></i> Admin Console
+                </div>
+
+                <div class="text-center py-3 mb-4 border-bottom border-secondary border-opacity-10">
+                    <div class="fs-1 text-primary"><i class="fas fa-user-shield"></i></div>
+                    <div class="fw-bold mt-2 text-main" id="adminName">Admin User</div>
+                    <small class="text-muted text-uppercase" style="font-size: 0.75rem;">Super Administrator</small>
+                </div>
+
+                <!-- Nav Menu List -->
+                <ul class="sidebar-nav-list">
+                    <li>
+                        <a href="#" class="sidebar-link active" id="linkAnalytics">
+                            <i class="fas fa-chart-line"></i> Dashboard & Analytics
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" id="linkQueueMonitor">
+                            <i class="fas fa-tv"></i> Live Queue Monitor
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" id="linkCounters">
+                            <i class="fas fa-desktop"></i> Counter Desks
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" id="linkBranches">
+                            <i class="fas fa-university"></i> DS Offices & Branches
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" id="linkStaff">
+                            <i class="fas fa-user-tie"></i> Staff & Shift Rosters
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" id="linkLogs">
+                            <i class="fas fa-history"></i> System Activity Logs
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link" id="linkVoice">
+                            <i class="fas fa-volume-up"></i> Voice Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Footer Sidebar Elements -->
+            <div>
+                <button class="theme-switch-btn w-100 mb-3 justify-content-center gap-2" style="border-radius:12px;">
+                    <i class="fas fa-sun"></i> Mode
+                </button>
+                <button class="glass-btn border-danger text-danger w-100 py-3" id="adminLogout">
+                    <i class="fas fa-sign-out-alt me-2"></i> Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Body Workspace -->
+        <main class="admin-main-content">
+            
+            <!-- Mobile Toggle Menu Header -->
+            <header class="d-lg-none d-flex justify-content-between align-items-center mb-4 p-3 glass-panel">
+                <div class="nav-brand-text fs-4">
+                    <i class="fas fa-layer-group"></i> QMS Admin
+                </div>
+                <button class="glass-btn px-3 py-2" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </header>
+
+            <!-- Dashboard Analytics Section -->
+            <section id="secAnalytics" class="admin-section animate-fade-in-up">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                    <h2 class="fw-bold mb-0">Operational Performance Overview</h2>
+                    <div class="d-flex gap-2">
+                        <button class="glass-btn glass-btn-danger" id="btnEmergencyTrigger">
+                            Emergency Override <i class="fas fa-exclamation-triangle ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Emergency System Status Bar (Hidden by default) -->
+                <div class="p-3 mb-4 glass-card d-flex align-items-center justify-content-between border-danger border-opacity-25 d-none animate-pulse" id="emergencyStatusBanner">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-radiation-alt text-danger fs-4"></i>
+                        <span class="text-danger fw-bold">EMERGENCY STATE: ALL QUEUE BROADCASTS AND CALLING DESKS SUSPENDED.</span>
+                    </div>
+                    <button class="glass-btn py-1 px-3 border-danger text-danger small" id="btnReleaseEmergencyBanner">
+                        Release Override
+                    </button>
+                </div>
+                
+                <!-- Regional & Branch Filter Bar -->
+                <div class="glass-panel p-4 mb-4 filter-controls-row">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="adminRegionSelect" class="form-label-custom">Filter Region</label>
+                            <select id="adminRegionSelect" class="glass-input glass-select small">
+                                <option value="all">All Regions</option>
+                                <option value="Northern">Northern Region</option>
+                                <option value="Western">Western Region</option>
+                                <option value="Eastern">Eastern Region</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="adminBranchFilter" class="form-label-custom">Filter Branch Office</label>
+                            <select id="adminBranchFilter" class="glass-input glass-select small">
+                                <option value="all">All DS Offices</option>
+                                <!-- Loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <button class="glass-btn py-2 px-3 small border-primary" id="btnRefreshAnalytics">
+                                Refresh Stats <i class="fas fa-sync-alt ms-1"></i>
+                            </button>
+                            <a href="reports.html" class="glass-btn py-2 px-3 small border-accent text-accent">
+                                Open Audit Desk <i class="fas fa-file-invoice ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI metrics cards -->
+                <div class="row g-3 mb-5">
+                    <div class="col-sm-6 col-md-4 col-xl-2">
+                        <div class="glass-card text-center p-3 h-100 d-flex flex-column justify-content-center">
+                            <div class="fs-2 text-primary mb-2"><i class="fas fa-users"></i></div>
+                            <h3 class="fw-bold mb-1 text-white" id="kpiTotalVisitors">0</h3>
+                            <small class="text-muted small uppercase font-monospace" style="font-size: 0.7rem;">Total Visitors Today</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-xl-2">
+                        <div class="glass-card text-center p-3 h-100 d-flex flex-column justify-content-center">
+                            <div class="fs-2 text-info mb-2"><i class="fas fa-layer-group"></i></div>
+                            <h3 class="fw-bold mb-1 text-white" id="kpiWaiting">0</h3>
+                            <small class="text-muted small uppercase font-monospace" style="font-size: 0.7rem;">Active Queues</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-xl-2">
+                        <div class="glass-card text-center p-3 h-100 d-flex flex-column justify-content-center">
+                            <div class="fs-2 text-success mb-2"><i class="fas fa-user-tie"></i></div>
+                            <h3 class="fw-bold mb-1 text-white" id="kpiAttendance">0</h3>
+                            <small class="text-muted small uppercase font-monospace" style="font-size: 0.7rem;">Staff Present</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-xl-2">
+                        <div class="glass-card text-center p-3 h-100 d-flex flex-column justify-content-center">
+                            <div class="fs-2 text-warning mb-2"><i class="fas fa-desktop"></i></div>
+                            <h3 class="fw-bold mb-1 text-white text-truncate" id="kpiBusy" style="font-size: 1rem;">0</h3>
+                            <small class="text-muted small uppercase font-monospace" style="font-size: 0.7rem;">Busy Counters</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-xl-2">
+                        <div class="glass-card text-center p-3 h-100 d-flex flex-column justify-content-center">
+                            <div class="fs-2 text-accent mb-2"><i class="fas fa-hourglass-half"></i></div>
+                            <h3 class="fw-bold mb-1 text-white" id="kpiWait">0m</h3>
+                            <small class="text-muted small uppercase font-monospace" style="font-size: 0.7rem;">Avg Wait Time</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-4 col-xl-2">
+                        <div class="glass-card text-center p-3 h-100 d-flex flex-column justify-content-center">
+                            <div class="fs-2 text-success mb-2"><i class="fas fa-check-circle"></i></div>
+                            <h3 class="fw-bold mb-1 text-white" id="kpiCompletionRate">0%</h3>
+                            <small class="text-muted small uppercase font-monospace" style="font-size: 0.7rem;">Completion Rate</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Display Grid -->
+                <div class="row g-4 mb-5">
+                    <div class="col-lg-8">
+                        <div class="glass-panel p-4 h-100">
+                            <h5 class="fw-bold mb-4">Hourly Queue Traffic Peak Trends</h5>
+                            <div style="height: 320px; position: relative;">
+                                <canvas id="chartLoadTrends"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="glass-panel p-4 h-100">
+                            <h5 class="fw-bold mb-4">Department Handling Loads</h5>
+                            <div style="height: 320px; position: relative;">
+                                <canvas id="chartDepartmentWait"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Queue Live Monitor Section -->
+            <section id="secQueueMonitor" class="admin-section d-none animate-fade-in-up">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                    <h2 class="fw-bold mb-0">Live Queue Monitor</h2>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small uppercase">DS Office:</span>
+                        <select id="adminBranchSelect" class="glass-btn py-2 px-3 small border border-secondary border-opacity-10 text-main">
+                            <!-- Seed branches dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Counters live grids -->
+                <h4 class="fw-bold mb-3"><i class="fas fa-desktop text-primary me-2"></i> Station Desk Status</h4>
+                <div class="row g-4 mb-5" id="adminCountersRoster">
+                    <!-- Cards loaded dynamically -->
+                </div>
+
+                <!-- Queue Waiting Table -->
+                <h4 class="fw-bold mb-3"><i class="fas fa-users text-accent me-2"></i> Active Queue Tickets</h4>
+                <div class="glass-panel p-4">
+                    <div class="table-responsive table-responsive-glass">
+                        <table class="table table-glass text-center align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Token Number</th>
+                                    <th>Customer Name</th>
+                                    <th>Service Department</th>
+                                    <th>Priority</th>
+                                    <th>Arrival Time</th>
+                                    <th>Status</th>
+                                    <th>Live Control Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminQueueTableBody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Counter Operations Section -->
+            <section id="secCounters" class="admin-section d-none animate-fade-in-up">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">Counter Desk Configuration</h2>
+                    <button class="glass-btn glass-btn-primary small py-2 px-3" data-bs-toggle="modal" data-bs-target="#modalAddCounter">
+                        Add New Counter <i class="fas fa-plus ms-1"></i>
+                    </button>
+                </div>
+                
+                <div class="glass-panel p-4">
+                    <div class="table-responsive table-responsive-glass">
+                        <table class="table table-glass text-center align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Counter Name</th>
+                                    <th>DS Branch Location</th>
+                                    <th>Assigned Operator</th>
+                                    <th>Serving Service</th>
+                                    <th>Serving Ticket</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminCountersConfigTable">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Branch & Regional Management Section -->
+            <section id="secBranches" class="admin-section d-none animate-fade-in-up">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">Divisional Secretariat Offices</h2>
+                    <button class="glass-btn glass-btn-primary small py-2 px-3" data-bs-toggle="modal" data-bs-target="#modalAddBranch">
+                        Add New Branch <i class="fas fa-plus ms-1"></i>
+                    </button>
+                </div>
+                
+                <div class="glass-panel p-4">
+                    <div class="table-responsive table-responsive-glass">
+                        <table class="table table-glass text-center align-middle">
+                            <thead>
+                                <tr>
+                                    <th>DS Branch Name</th>
+                                    <th>Region Group</th>
+                                    <th>Location Address</th>
+                                    <th>Total Counters</th>
+                                    <th>Waitlist Load</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminBranchesTableBody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Staff & Shift Management Section -->
+            <section id="secStaff" class="admin-section d-none animate-fade-in-up">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">Officer Rosters & Shifts</h2>
+                    <button class="glass-btn glass-btn-accent small py-2 px-3" data-bs-toggle="modal" data-bs-target="#modalAssignShift">
+                        Assign Officer Shift <i class="fas fa-calendar-plus ms-1"></i>
+                    </button>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="glass-card text-center p-3">
+                            <span class="text-muted d-block small mb-1">Present & Active</span>
+                            <h3 class="fw-bold text-success" id="staffPresentCount">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="glass-card text-center p-3">
+                            <span class="text-muted d-block small mb-1">On Rest Break</span>
+                            <h3 class="fw-bold text-warning" id="staffBreakCount">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="glass-card text-center p-3">
+                            <span class="text-muted d-block small mb-1">Offline</span>
+                            <h3 class="fw-bold text-muted" id="staffOfflineCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 class="fw-bold mb-3"><i class="fas fa-user-shield text-primary me-2"></i> Operator Directory & Permissions</h4>
+                <div class="glass-panel p-4 mb-5">
+                    <div class="table-responsive table-responsive-glass">
+                        <table class="table table-glass text-center align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Officer Name</th>
+                                    <th>Email Access</th>
+                                    <th>System Role</th>
+                                    <th>Assigned Branch</th>
+                                    <th>Shift / Timetable</th>
+                                    <th>Attendance</th>
+                                    <th>System Toggles</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminStaffTableBody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <h4 class="fw-bold mb-3"><i class="fas fa-calendar-alt text-accent me-2"></i> Visual Shift Schedule Calendar</h4>
+                <div class="glass-panel p-4">
+                    <div class="table-responsive table-responsive-glass">
+                        <table class="table table-glass text-center align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Shift Timetable</th>
+                                    <th>Assigned Officer</th>
+                                    <th>Location Branch</th>
+                                    <th>Working Hours</th>
+                                    <th>Days rostered</th>
+                                    <th>Shift Controls</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminShiftsTableBody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Activity Logs Section -->
+            <section id="secLogs" class="admin-section d-none animate-fade-in-up">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                    <h2 class="fw-bold mb-0">System Activity Auditing Stream</h2>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="text" id="logSearchInput" class="glass-btn py-1 px-3 small text-main" placeholder="Search audit logs..." style="width:220px; text-align:left;">
+                        <select id="logTypeFilter" class="glass-btn py-2 px-3 small border border-secondary border-opacity-10 text-main">
+                            <option value="all">All Event Types</option>
+                            <option value="INFO">Information</option>
+                            <option value="SUCCESS">Success Actions</option>
+                            <option value="WARNING">Warnings</option>
+                            <option value="EMERGENCY">Emergencies</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-4">
+                    <div class="table-responsive table-responsive-glass" style="max-height: 520px; overflow-y: auto;">
+                        <table class="table table-glass text-center align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Severity</th>
+                                    <th>Operator/Actor</th>
+                                    <th>Branch Action</th>
+                                    <th>Log Audit Message</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminLogsTableBody">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Voice Announcement Settings Section -->
+            <section id="secVoice" class="admin-section d-none animate-fade-in-up">
+                <h2 class="fw-bold mb-4">Text-to-Speech Vocal Calling System</h2>
+                
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="glass-panel p-4 p-md-5">
+                            <h4 class="fw-bold mb-4"><i class="fas fa-sliders-h me-2 text-primary"></i> TTS Synthesizer Adjustments</h4>
+                            
+                            <form id="voiceSettingsForm">
+                                <!-- Enable/Disable -->
+                                <div class="form-check form-switch mb-4">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="voiceToggleEnabled" checked>
+                                    <label class="form-check-label fw-bold text-main" for="voiceToggleEnabled">Enable Vocal Announcements (Speaks calling numbers aloud)</label>
+                                    <small class="text-muted d-block mt-1">Uses HTML SpeechSynthesis engine in the browser</small>
+                                </div>
+
+                                <!-- Speech rate -->
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <label for="voiceRate" class="form-label-custom mb-0">Voice Speed (Rate)</label>
+                                        <span class="text-primary small fw-bold" id="voiceRateVal">1.0</span>
+                                    </div>
+                                    <input type="range" class="form-range" min="0.5" max="2" step="0.1" id="voiceRate" value="0.95">
+                                </div>
+
+                                <!-- Pitch -->
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <label for="voicePitch" class="form-label-custom mb-0">Vocal Pitch</label>
+                                        <span class="text-primary small fw-bold" id="voicePitchVal">1.0</span>
+                                    </div>
+                                    <input type="range" class="form-range" min="0.5" max="2" step="0.1" id="voicePitch" value="1.0">
+                                </div>
+
+                                <!-- Select Voice Model -->
+                                <div class="glass-input-group mb-4">
+                                    <label for="voiceSelectModel" class="form-label-custom">Synthesizer Voice Model</label>
+                                    <select id="voiceSelectModel" class="glass-input glass-select">
+                                        <!-- Loaded dynamically -->
+                                    </select>
+                                    <i class="fas fa-language"></i>
+                                </div>
+
+                                <!-- Sample call -->
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="glass-btn glass-btn-primary flex-grow-1" id="btnTestAnnouncement">
+                                        Test Audio <i class="fas fa-volume-up ms-1"></i>
+                                    </button>
+                                    <button type="submit" class="glass-btn glass-btn-accent px-4">
+                                        Save Configuration
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        <!-- Horizontal Scrollable Showcase Section -->
+        <section class="mb-5 px-0 px-md-3">
+            <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                <h3 class="fw-bold mb-0">
+                    <i class="fas fa-cubes me-2 text-primary animate-pulse"></i> Featured Services & Special Access
+                </h3>
+                <span class="badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill d-none d-md-inline-block">
+                    <i class="fas fa-mouse me-1"></i> Use Mouse Wheel to Scroll
+                </span>
+            </div>
+            
+            <div class="horizontal-scroll-container" id="hzScrollShowcase">
+                <!-- Card 1 -->
+                <div class="hz-scroll-card border border-primary border-opacity-10">
+                    <div class="hz-card-icon text-primary bg-primary bg-opacity-10">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Express Counter</h5>
+                        <p class="text-muted text-wrap">Fast-track service desk for single-item document requests under 5 minutes.</p>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 mt-2 align-self-start">Active</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="hz-scroll-card border border-accent border-opacity-10">
+                    <div class="hz-card-icon text-accent bg-accent bg-opacity-10">
+                        <i class="fas fa-wheelchair"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Assisted Priority</h5>
+                        <p class="text-muted text-wrap">Dedicated service row and lounge for senior citizens and disabled visitors.</p>
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 mt-2 align-self-start">Special Priority</span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="hz-scroll-card border border-info border-opacity-10">
+                    <div class="hz-card-icon text-info bg-info bg-opacity-10">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Mobile QR Tickets</h5>
+                        <p class="text-muted text-wrap">Scan physical ticket kiosk receipts to load real-time status directly on mobile phone.</p>
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 mt-2 align-self-start">Fully Digital</span>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="hz-scroll-card border border-warning border-opacity-10">
+                    <div class="hz-card-icon text-warning bg-warning bg-opacity-10">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Vocal TTS Callouts</h5>
+                        <p class="text-muted text-wrap">Automatic browser synthesized high-fidelity audio announcement of called tokens.</p>
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 mt-2 align-self-start">Sound Enabled</span>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="hz-scroll-card border border-success border-opacity-10">
+                    <div class="hz-card-icon text-success bg-success bg-opacity-10">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Smart Analytics</h5>
+                        <p class="text-muted text-wrap">Real-time statistics dashboard reflecting wait loads and throughput timings.</p>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 mt-2 align-self-start">Live Insights</span>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="hz-scroll-card border border-primary border-opacity-10">
+                    <div class="hz-card-icon text-primary bg-primary bg-opacity-10">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Audit Log Streams</h5>
+                        <p class="text-muted text-wrap">Comprehensive tracking system for security audits, staff changes, and ticket status.</p>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 mt-2 align-self-start">Secure Logs</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL POPUPS FOR DYNAMIC ACTIONS -->
+    
+    <!-- 1. Ticket Transfer Modal -->
+    <div class="modal fade" id="modalTransferTicket" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel" style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--glass-border);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-main" id="transferModalLabel">Transfer Ticket</h5>
+                    <button type="button" class="glass-btn px-2 py-1 text-muted" data-bs-dismiss="modal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formTransferTicket">
+                        <input type="hidden" id="transferTicketId">
+                        
+                        <div class="glass-input-group mb-3">
+                            <label for="transferBranchSelect" class="form-label-custom">Target DS Branch</label>
+                            <select id="transferBranchSelect" class="glass-input glass-select" required>
+                                <!-- Seed branches dynamically -->
+                            </select>
+                            <i class="fas fa-university"></i>
+                        </div>
+
+                        <div class="glass-input-group mb-3">
+                            <label for="transferServiceSelect" class="form-label-custom">Target Department/Service</label>
+                            <select id="transferServiceSelect" class="glass-input glass-select" required>
+                                <!-- Seed services dynamically -->
+                            </select>
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+
+                        <button type="submit" class="glass-btn glass-btn-primary w-100 py-3 mt-2">
+                            Complete Transfer <i class="fas fa-exchange-alt ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Add Counter Modal -->
+    <div class="modal fade" id="modalAddCounter" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel" style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--glass-border);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-main">Configure Counter Desk</h5>
+                    <button type="button" class="glass-btn px-2 py-1 text-muted" data-bs-dismiss="modal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAddCounter">
+                        <div class="glass-input-group mb-3">
+                            <label for="newCounterName" class="form-label-custom">Counter Name (e.g. Counter 5)</label>
+                            <input type="text" id="newCounterName" class="glass-input" placeholder="Counter 5" required>
+                            <i class="fas fa-desktop"></i>
+                        </div>
+                        
+                        <div class="glass-input-group mb-3">
+                            <label for="newCounterBranch" class="form-label-custom">Branch Office</label>
+                            <select id="newCounterBranch" class="glass-input glass-select" required>
+                                <!-- Loaded dynamically -->
+                            </select>
+                            <i class="fas fa-university"></i>
+                        </div>
+
+                        <div class="glass-input-group mb-3">
+                            <label for="newCounterService" class="form-label-custom">Serving Department</label>
+                            <select id="newCounterService" class="glass-input glass-select" required>
+                                <!-- Loaded dynamically -->
+                            </select>
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+
+                        <div class="glass-input-group mb-3">
+                            <label for="newCounterAgent" class="form-label-custom">Assigned Operator Name</label>
+                            <input type="text" id="newCounterAgent" class="glass-input" placeholder="Operator Name" required>
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+
+                        <button type="submit" class="glass-btn glass-btn-primary w-100 py-3 mt-2">
+                            Add Counter Desk <i class="fas fa-plus ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Add Branch Modal -->
+    <div class="modal fade" id="modalAddBranch" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel" style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--glass-border);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-main">Configure DS Branch Office</h5>
+                    <button type="button" class="glass-btn px-2 py-1 text-muted" data-bs-dismiss="modal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAddBranch">
+                        <div class="glass-input-group mb-3">
+                            <label for="newBranchName" class="form-label-custom">DS Branch Name (e.g. Jaffna DS Office)</label>
+                            <input type="text" id="newBranchName" class="glass-input" placeholder="Jaffna DS Office" required>
+                            <i class="fas fa-university"></i>
+                        </div>
+
+                        <div class="glass-input-group mb-3">
+                            <label for="newBranchRegion" class="form-label-custom">Region Group</label>
+                            <select id="newBranchRegion" class="glass-input glass-select" required>
+                                <option value="Northern">Northern Region</option>
+                                <option value="Western">Western Region</option>
+                                <option value="Eastern">Eastern Region</option>
+                            </select>
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+
+                        <div class="glass-input-group mb-3">
+                            <label for="newBranchAddress" class="form-label-custom">DS Address</label>
+                            <input type="text" id="newBranchAddress" class="glass-input" placeholder="Main Road, Jaffna" required>
+                            <i class="fas fa-road"></i>
+                        </div>
+
+                        <button type="submit" class="glass-btn glass-btn-primary w-100 py-3 mt-2">
+                            Add Branch Location <i class="fas fa-plus ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Assign Shift Modal -->
+    <div class="modal fade" id="modalAssignShift" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel" style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--glass-border);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-main">Roster Staff Shift Schedule</h5>
+                    <button type="button" class="glass-btn px-2 py-1 text-muted" data-bs-dismiss="modal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAssignShift">
+                        <div class="glass-input-group mb-3">
+                            <label for="shiftOfficer" class="form-label-custom">Assign Officer</label>
+                            <select id="shiftOfficer" class="glass-input glass-select" required>
+                                <!-- Seed dynamically -->
+                            </select>
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+
+                        <div class="glass-input-group mb-3">
+                            <label for="shiftName" class="form-label-custom">Shift Timetable Name</label>
+                            <select id="shiftName" class="glass-input glass-select" required>
+                                <option value="Morning Shift">Morning Shift (08:00 - 13:00)</option>
+                                <option value="Afternoon Shift">Afternoon Shift (13:00 - 18:00)</option>
+                            </select>
+                            <i class="fas fa-clock"></i>
+                        </div>
+
+                        <div class="glass-input-group mb-3">
+                            <label for="shiftBranch" class="form-label-custom">Working Location</label>
+                            <select id="shiftBranch" class="glass-input glass-select" required>
+                                <!-- Seed dynamically -->
+                            </select>
+                            <i class="fas fa-university"></i>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label-custom">Working Days</label>
+                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="shiftDays" id="dayMon" value="Monday" checked>
+                                    <label class="form-check-label text-main small" for="dayMon">Mon</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="shiftDays" id="dayTue" value="Tuesday" checked>
+                                    <label class="form-check-label text-main small" for="dayTue">Tue</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="shiftDays" id="dayWed" value="Wednesday" checked>
+                                    <label class="form-check-label text-main small" for="dayWed">Wed</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="shiftDays" id="dayThu" value="Thursday" checked>
+                                    <label class="form-check-label text-main small" for="dayThu">Thu</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="shiftDays" id="dayFri" value="Friday" checked>
+                                    <label class="form-check-label text-main small" for="dayFri">Fri</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="glass-btn glass-btn-primary w-100 py-3 mt-2">
+                            Assign Shift Timetable <i class="fas fa-calendar-check ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Javascript Scripts -->
+    <!-- ChartJS library for dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

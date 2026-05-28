@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMS - Officer Counter Terminal</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Wallpaper Overlay for background effects -->
+    <div class="auth-bg-overlay"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="glass-nav py-3">
+        <div class="container-fluid container-lg d-flex justify-content-between align-items-center">
+            <a href="index.html" class="nav-brand-text text-decoration-none">
+                <i class="fas fa-layer-group"></i> QMS Counter Station
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-success bg-opacity-25 text-success px-3 py-2 fs-7" id="stationStatusBadge">
+                    <i class="fas fa-circle-notch animate-spin me-1"></i> Connecting...
+                </span>
+                <select id="officerAttendanceSelect" class="glass-btn py-1 px-2 border-primary text-primary small" style="border-radius:8px; width: 135px;">
+                    <option value="Active">Duty: Active</option>
+                    <option value="On Break">Duty: On Break</option>
+                    <option value="Offline">Duty: Offline</option>
+                </select>
+                <button class="glass-btn border-danger text-danger px-3 py-2 small" id="counterLogout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+                <button class="theme-switch-btn" title="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="container py-4 animate-fade-in-up">
+        
+        <!-- Counter Initial Selection Panel (shown if no counter selected) -->
+        <div class="row justify-content-center py-5" id="counterSelectorPanel">
+            <div class="col-md-8 col-lg-6">
+                <div class="glass-panel p-4 p-md-5 text-center">
+                    <i class="fas fa-desktop text-primary fs-1 mb-3"></i>
+                    <h3 class="fw-bold mb-3">Select Your Counter Station</h3>
+                    <p class="text-muted small mb-4">Choose the physical desk you are currently occupying to load your department queue list.</p>
+                    
+                    <div class="glass-input-group mb-4">
+                        <label for="stationSelectorSelect" class="form-label-custom">Counter Desk</label>
+                        <select id="stationSelectorSelect" class="glass-input glass-select">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <i class="fas fa-laptop"></i>
+                    </div>
+
+                    <button class="glass-btn glass-btn-primary w-100 py-3" id="btnLaunchStation">
+                        Launch Station Console <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Counter Active Operations Console (Hidden initially) -->
+        <div class="row g-4 d-none" id="counterConsoleWorkspace">
+            
+            <!-- Desk details & active token display -->
+            <div class="col-lg-7">
+                
+                <!-- Station Profile Summary -->
+                <div class="glass-panel p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 border-secondary border-opacity-10">
+                        <div>
+                            <h3 class="fw-bold mb-0 text-primary" id="activeCounterTitle">Counter 1</h3>
+                            <small class="text-muted" id="activeAgentSub">Officer: Alice Miller</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="counterOnlineSwitch" checked>
+                            <label class="form-check-label text-muted small fw-bold" for="counterOnlineSwitch">Counter Online</label>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block small">Service Department</small>
+                            <strong class="text-main" id="activeServiceText">Birth Certificate</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block small">Location</small>
+                            <strong class="text-main">Vavuniya Branch</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Now Serving Main Box -->
+                <div class="glass-panel p-4 p-md-5 text-center mb-4 border border-info border-opacity-10 pulse-glow-primary">
+                    <span class="text-muted text-uppercase fw-bold tracking-wider small d-block mb-2">Currently Serving Customer</span>
+                    <h1 class="display-1 fw-extrabold my-2 text-white" id="servingTokenNum">---</h1>
+                    
+                    <div id="servingCustomerDetails" class="d-none mt-3">
+                        <h4 class="fw-bold mb-1 text-accent" id="servingCustomerName">Tony Stark</h4>
+                        <small class="text-muted d-block mb-2" id="servingCustomerPhone">+1 555-3000</small>
+                        <span class="badge bg-opacity-20 border px-3 py-1 d-none" id="servingPriorityBadge">Elderly</span>
+                        
+                        <!-- Service timer -->
+                        <div class="mt-4 fs-5 text-muted">
+                            <i class="far fa-clock text-primary me-1"></i> Service Time: 
+                            <strong class="text-white" id="serviceTimer">00:00</strong>
+                        </div>
+                    </div>
+
+                    <div id="servingEmptyState" class="py-4 text-muted">
+                        <p class="mb-0 fs-5"><i class="fas fa-info-circle text-primary me-2"></i> No customer currently being served. Click "Call Next" to fetch the next ticket in line.</p>
+                    </div>
+                </div>
+
+                <!-- Call Control Action buttons -->
+                <div class="glass-panel p-4">
+                    <h5 class="fw-bold mb-3 border-bottom pb-2 border-secondary border-opacity-10">Console Operations</h5>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <button class="glass-btn glass-btn-primary w-100 py-3" id="btnCallNext">
+                                Call Next <i class="fas fa-bullhorn ms-2"></i>
+                            </button>
+                        </div>
+                        <div class="col-sm-6">
+                            <button class="glass-btn border-info text-info w-100 py-3" id="btnRecall">
+                                Recall Chime <i class="fas fa-volume-up ms-2"></i>
+                            </button>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="glass-btn glass-btn-success w-100 py-3" id="btnComplete">
+                                Complete <i class="fas fa-check-circle ms-2"></i>
+                            </button>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="glass-btn border-warning text-warning w-100 py-3" id="btnHold">
+                                Hold Ticket <i class="fas fa-pause ms-2"></i>
+                            </button>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="glass-btn border-info text-info w-100 py-3" id="btnTransfer">
+                                Transfer <i class="fas fa-exchange-alt ms-2"></i>
+                            </button>
+                        </div>
+                        <div class="col-sm-12">
+                            <button class="glass-btn border-danger text-danger w-100 py-2" id="btnNoShow">
+                                Mark No-Show <i class="fas fa-ban ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Waitlist sidebar -->
+            <div class="col-lg-5">
+                <div class="glass-panel p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2 border-secondary border-opacity-10">
+                        <h4 class="fw-bold mb-0">Department Waitlist</h4>
+                        <span class="badge bg-secondary px-3 py-1" id="waitlistCount">0 Waiting</span>
+                    </div>
+
+                    <!-- Filtered List of Waiting Tickets -->
+                    <div class="d-flex flex-column gap-3 overflow-auto" style="max-height: 480px;" id="stationWaitlistContainer">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Horizontal Scrollable Showcase Section -->
+        <section class="mb-5 px-0 px-md-3">
+            <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                <h3 class="fw-bold mb-0">
+                    <i class="fas fa-cubes me-2 text-primary animate-pulse"></i> Featured Services & Special Access
+                </h3>
+                <span class="badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill d-none d-md-inline-block">
+                    <i class="fas fa-mouse me-1"></i> Use Mouse Wheel to Scroll
+                </span>
+            </div>
+            
+            <div class="horizontal-scroll-container" id="hzScrollShowcase">
+                <!-- Card 1 -->
+                <div class="hz-scroll-card border border-primary border-opacity-10">
+                    <div class="hz-card-icon text-primary bg-primary bg-opacity-10">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Express Counter</h5>
+                        <p class="text-muted text-wrap">Fast-track service desk for single-item document requests under 5 minutes.</p>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 mt-2 align-self-start">Active</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="hz-scroll-card border border-accent border-opacity-10">
+                    <div class="hz-card-icon text-accent bg-accent bg-opacity-10">
+                        <i class="fas fa-wheelchair"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Assisted Priority</h5>
+                        <p class="text-muted text-wrap">Dedicated service row and lounge for senior citizens and disabled visitors.</p>
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 mt-2 align-self-start">Special Priority</span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="hz-scroll-card border border-info border-opacity-10">
+                    <div class="hz-card-icon text-info bg-info bg-opacity-10">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Mobile QR Tickets</h5>
+                        <p class="text-muted text-wrap">Scan physical ticket kiosk receipts to load real-time status directly on mobile phone.</p>
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 mt-2 align-self-start">Fully Digital</span>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="hz-scroll-card border border-warning border-opacity-10">
+                    <div class="hz-card-icon text-warning bg-warning bg-opacity-10">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Vocal TTS Callouts</h5>
+                        <p class="text-muted text-wrap">Automatic browser synthesized high-fidelity audio announcement of called tokens.</p>
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 mt-2 align-self-start">Sound Enabled</span>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="hz-scroll-card border border-success border-opacity-10">
+                    <div class="hz-card-icon text-success bg-success bg-opacity-10">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Smart Analytics</h5>
+                        <p class="text-muted text-wrap">Real-time statistics dashboard reflecting wait loads and throughput timings.</p>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 mt-2 align-self-start">Live Insights</span>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="hz-scroll-card border border-primary border-opacity-10">
+                    <div class="hz-card-icon text-primary bg-primary bg-opacity-10">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Audit Log Streams</h5>
+                        <p class="text-muted text-wrap">Comprehensive tracking system for security audits, staff changes, and ticket status.</p>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 mt-2 align-self-start">Secure Logs</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 5. Ticket Transfer Modal -->
+    <div class="modal fade" id="modalTransferTicket" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel" style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--glass-border);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-main">Transfer Active Customer</h5>
+                    <button type="button" class="glass-btn px-2 py-1 text-muted" data-bs-dismiss="modal"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formTransferTicket">
+                        <div class="glass-input-group mb-3">
+                            <label for="transferBranchSelect" class="form-label-custom">Target DS Branch</label>
+                            <select id="transferBranchSelect" class="glass-input glass-select" required>
+                                <!-- Seed dynamically -->
+                            </select>
+                            <i class="fas fa-university"></i>
+                        </div>
+
+                        <div class="glass-input-group mb-3">
+                            <label for="transferServiceSelect" class="form-label-custom">Target Service/Dept</label>
+                            <select id="transferServiceSelect" class="glass-input glass-select" required>
+                                <!-- Seed dynamically -->
+                            </select>
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+
+                        <button type="submit" class="glass-btn glass-btn-primary w-100 py-3 mt-2">
+                            Complete Transfer <i class="fas fa-exchange-alt ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let selectedCounterId = "";
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let loggedInOfficer = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Secure check: must be logged in as admin/staff to manage counter stations
+            const sessionUser = localStorage.getItem('qms_logged_in_user');
+            if (!sessionUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            loggedInOfficer = JSON.parse(sessionUser);
+            const permittedRoles = ['admin', 'officer', 'branch-manager'];
+            if (!permittedRoles.includes(loggedInOfficer.role)) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            initSelectorUI();
+
+            // Set up initial attendance select state
+            const attSelect = document.getElementById('officerAttendanceSelect');
+            if (attSelect) {
+                attSelect.value = loggedInOfficer.attendanceStatus || 'Active';
+                attSelect.addEventListener('change', () => {
+                    const status = attSelect.value;
+                    window.qms.logAttendance(loggedInOfficer.email, `Officer set status to ${status}`, status);
+                    window.qms.addLog(`Officer ${loggedInOfficer.name} changed status to ${status}.`, loggedInOfficer.email, loggedInOfficer.assignedBranchId || 'all', 'INFO');
+                    window.qms.showToast('Status Updated', `Duty status updated to ${status}.`, 'success');
+                    
+                    // Trigger sync and UI updates
+                    const db = window.qms.getDB();
+                    window.qms.saveDB(db);
+                });
+            }
+
+            // Watch state changes
+            window.addEventListener('qmsStateUpdated', () => {
+                if (selectedCounterId) {
+                    renderStationConsole();
+                }
+            });
+
+            // Action triggers
+            document.getElementById('btnLaunchStation').onclick = launchCounterConsole;
+            
+            document.getElementById('btnCallNext').onclick = callNext;
+            document.getElementById('btnRecall').onclick = recall;
+            document.getElementById('btnComplete').onclick = complete;
+            document.getElementById('btnHold').onclick = hold;
+            document.getElementById('btnTransfer').onclick = openTransfer;
+            document.getElementById('btnNoShow').onclick = noShow;
+            
+            document.getElementById('counterOnlineSwitch').onchange = toggleOnline;
+
+            // Form Submit for Ticket Transfer
+            const formTransfer = document.getElementById('formTransferTicket');
+            if (formTransfer) {
+                formTransfer.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    let db = window.qms.getDB();
+                    const counter = db.counters.find(c => c.id === selectedCounterId);
+                    if (!counter.currentTicket) return;
+                    
+                    const ticket = db.tickets.find(t => t.number === counter.currentTicket && t.status === 'Serving');
+                    if (ticket) {
+                        const targetBranch = document.getElementById('transferBranchSelect').value;
+                        const targetService = document.getElementById('transferServiceSelect').value;
+                        
+                        const success = window.qms.transferTicket(ticket.id, targetService, targetBranch, '', loggedInOfficer.email);
+                        if (success) {
+                            counter.currentTicket = '';
+                            window.qms.saveDB(db);
+                            
+                            // Close Modal
+                            const modalEl = document.getElementById('modalTransferTicket');
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                            
+                            window.qms.showToast('Ticket Transferred', 'Customer transferred to target queue.', 'success');
+                            renderStationConsole();
+                        }
+                    }
+                });
+            }
+
+            // Logout
+            document.getElementById('counterLogout').onclick = () => {
+                localStorage.removeItem('qms_logged_in_user');
+                window.location.href = 'login.html';
+            };
+        });
+
+        function initSelectorUI() {
+            const db = window.qms.getDB();
+            const select = document.getElementById('stationSelectorSelect');
+            
+            // Filters counters assigned to this officer, or all counters if Super Admin
+            let availableCounters = db.counters;
+            if (loggedInOfficer.role === 'officer') {
+                availableCounters = db.counters.filter(c => c.agent === loggedInOfficer.name || c.id === loggedInOfficer.assignedCounterId);
+            } else if (loggedInOfficer.role === 'branch-manager') {
+                availableCounters = db.counters.filter(c => c.branchId === loggedInOfficer.assignedBranchId);
+            }
+
+            if (availableCounters.length === 0) {
+                select.innerHTML = '<option value="">No counters assigned to your operator account</option>';
+                return;
+            }
+
+            select.innerHTML = availableCounters.map(c => {
+                const branch = db.branches.find(b => b.id === c.branchId);
+                return `<option value="${c.id}">${c.name} - ${c.agent} (${branch ? branch.name : 'Unknown'})</option>`;
+            }).join('');
+        }
+
+        function launchCounterConsole() {
+            selectedCounterId = document.getElementById('stationSelectorSelect').value;
+            if (!selectedCounterId) {
+                alert("Please select a valid counter station desk.");
+                return;
+            }
+            
+            document.getElementById('counterSelectorPanel').classList.add('d-none');
+            document.getElementById('counterConsoleWorkspace').classList.remove('d-none');
+
+            // Set connected status
+            const badge = document.getElementById('stationStatusBadge');
+            badge.className = "badge bg-success bg-opacity-25 text-success px-3 py-2 fs-7";
+            badge.innerHTML = `<i class="fas fa-circle me-1 text-success"></i> OPERATIONAL`;
+
+            // Seed transfer form branch/service options
+            const db = window.qms.getDB();
+            document.getElementById('transferBranchSelect').innerHTML = db.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            document.getElementById('transferServiceSelect').innerHTML = db.services.map(s => `<option value="${s.id}">${s.name} (${s.code})</option>`).join('');
+
+            renderStationConsole();
+        }
+
+        function renderStationConsole() {
+            const db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+            const service = db.services.find(s => s.id === counter.activeService);
+            const branch = db.branches.find(b => b.id === counter.branchId);
+
+            // Populate summary details
+            document.getElementById('activeCounterTitle').innerText = counter.name;
+            document.getElementById('activeAgentSub').innerText = `Officer: ${counter.agent}`;
+            document.getElementById('activeServiceText').innerText = service ? service.name : 'General Operations';
+            document.getElementById('counterOnlineSwitch').checked = counter.status === 'Active';
+
+            // Serving detail
+            const token = counter.currentTicket;
+            const servingToken = document.getElementById('servingTokenNum');
+            const customerDetails = document.getElementById('servingCustomerDetails');
+            const emptyState = document.getElementById('servingEmptyState');
+
+            // 1. Emergency lockdown check
+            const isEmergency = db.systemSettings && db.systemSettings.emergencyActive === true;
+            const consoleButtons = ['btnCallNext', 'btnRecall', 'btnComplete', 'btnHold', 'btnTransfer', 'btnNoShow', 'counterOnlineSwitch'];
+            
+            if (isEmergency) {
+                consoleButtons.forEach(btnId => {
+                    const btn = document.getElementById(btnId);
+                    if (btn) btn.disabled = true;
+                });
+                
+                const badge = document.getElementById('stationStatusBadge');
+                badge.className = "badge bg-danger bg-opacity-25 text-danger px-3 py-2 fs-7 animate-pulse";
+                badge.innerHTML = `<i class="fas fa-radiation-alt me-1"></i> SUSPENDED (EMERGENCY)`;
+
+                servingToken.innerText = "HALTED";
+                emptyState.innerHTML = `<p class="mb-0 text-danger fw-bold fs-5"><i class="fas fa-exclamation-triangle me-2"></i> EMERGENCY STATE ACTIVE: Operations have been paused globally by the regional desk.</p>`;
+                emptyState.classList.remove('d-none');
+                customerDetails.classList.add('d-none');
+                stopTimer();
+                return;
+            } else {
+                consoleButtons.forEach(btnId => {
+                    const btn = document.getElementById(btnId);
+                    if (btn) btn.disabled = false;
+                });
+                
+                const badge = document.getElementById('stationStatusBadge');
+                badge.className = "badge bg-success bg-opacity-25 text-success px-3 py-2 fs-7";
+                badge.innerHTML = `<i class="fas fa-circle me-1"></i> OPERATIONAL`;
+            }
+
+            if (token) {
+                servingToken.innerText = token;
+                emptyState.classList.add('d-none');
+                customerDetails.classList.remove('d-none');
+
+                // Find customer metadata
+                const ticket = db.tickets.find(t => t.number === token && t.status === 'Serving');
+                const pBadge = document.getElementById('servingPriorityBadge');
+                if (ticket) {
+                    document.getElementById('servingCustomerName').innerText = ticket.customerName;
+                    document.getElementById('servingCustomerPhone').innerText = ticket.phone;
+                    if (pBadge) {
+                        const pGroup = ticket.priorityGroup || 'Regular';
+                        if (pGroup !== 'Regular') {
+                            pBadge.innerText = pGroup + " Priority";
+                            pBadge.classList.remove('d-none');
+                            let pColor = "#94a3b8";
+                            if (pGroup === 'Emergency') pColor = "#ef4444";
+                            else if (pGroup === 'Disabled') pColor = "#f59e0b";
+                            else if (pGroup === 'Elderly') pColor = "#06b6d4";
+                            else if (pGroup === 'VIP') pColor = "#8b5cf6";
+                            pBadge.style.color = pColor;
+                            pBadge.style.borderColor = pColor + "50";
+                        } else {
+                            pBadge.classList.add('d-none');
+                        }
+                    }
+                    startTimer();
+                } else {
+                    document.getElementById('servingCustomerName').innerText = "Walk-in Guest";
+                    document.getElementById('servingCustomerPhone').innerText = "---";
+                    if (pBadge) pBadge.classList.add('d-none');
+                    startTimer();
+                }
+            } else {
+                servingToken.innerText = "---";
+                customerDetails.classList.add('d-none');
+                emptyState.innerHTML = `<p class="mb-0 fs-5"><i class="fas fa-info-circle text-primary me-2"></i> No customer currently being served. Click "Call Next" to fetch the next ticket in line.</p>`;
+                emptyState.classList.remove('d-none');
+                stopTimer();
+            }
+
+            // Fill Waiting list container
+            const container = document.getElementById('stationWaitlistContainer');
+            const waitTickets = window.qms.sortTickets(db.tickets.filter(t => t.serviceId === counter.activeService && t.branchId === counter.branchId && t.status === 'Waiting'));
+
+            document.getElementById('waitlistCount').innerText = `${waitTickets.length} Waiting`;
+
+            if (waitTickets.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-check-circle fs-2 mb-2 text-success"></i>
+                        <div>Queue Cleared!</div>
+                        <div class="small">No customers waiting for this department.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = waitTickets.map((tk, index) => {
+                let priorityBadge = "";
+                const pGroup = tk.priorityGroup || 'Regular';
+                if (pGroup !== 'Regular') {
+                    let pColor = "var(--text-muted)";
+                    let pIcon = "fa-user-shield";
+                    if (pGroup === 'Emergency') { pColor = "#ef4444"; pIcon = "fa-exclamation-triangle"; }
+                    else if (pGroup === 'Disabled') { pColor = "#f59e0b"; pIcon = "fa-wheelchair"; }
+                    else if (pGroup === 'Elderly') { pColor = "#06b6d4"; pIcon = "fa-blind"; }
+                    else if (pGroup === 'VIP') { pColor = "#8b5cf6"; pIcon = "fa-crown"; }
+                    priorityBadge = `<span class="badge ms-2" style="background: rgba(255,255,255,0.05); color: ${pColor}; border: 1px solid ${pColor}50; font-size: 0.7rem;"><i class="fas ${pIcon} me-1"></i>${pGroup}</span>`;
+                }
+
+                return `
+                    <div class="glass-card d-flex justify-content-between align-items-center p-3 animate-fade-in-up">
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary bg-opacity-25 text-primary fw-bold mb-1">${tk.number}</span>
+                                ${priorityBadge}
+                            </div>
+                            <div class="fw-bold mb-0 text-white">${tk.customerName}</div>
+                            <small class="text-muted small">Booked: ${new Date(tk.timeCreated).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 fs-7 mb-2"># ${index + 1}</span>
+                            <div>
+                                <button class="glass-btn py-1 px-2 small glass-btn-primary" onclick="callTargetTicket('${tk.id}')" title="Call directly">
+                                    Call <i class="fas fa-bullhorn"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function callNext() {
+            const db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+
+            const waitTickets = window.qms.sortTickets(db.tickets.filter(t => t.serviceId === counter.activeService && t.branchId === counter.branchId && t.status === 'Waiting'));
+
+            if (waitTickets.length === 0) {
+                window.qms.showToast('Waitlist Empty', 'No pending customers in your queue.', 'warning');
+                return;
+            }
+
+            callTargetTicket(waitTickets[0].id);
+        }
+
+        window.callTargetTicket = function(ticketId) {
+            let db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+            const ticket = db.tickets.find(t => t.id === ticketId);
+
+            // Complete current counter ticket first
+            if (counter.currentTicket) {
+                const prev = db.tickets.find(t => t.number === counter.currentTicket && t.branchId === counter.branchId && t.status === 'Serving');
+                if (prev) {
+                    prev.status = 'Completed';
+                    prev.timeCompleted = new Date().toISOString();
+                }
+            }
+
+            // Assign new serving state
+            ticket.status = 'Serving';
+            ticket.counter = counter.name;
+            counter.currentTicket = ticket.number;
+
+            window.qms.saveDB(db);
+            window.qms.addLog(`Officer ${counter.agent} called token ${ticket.number} to ${counter.name}.`, counter.agent, counter.branchId, 'SUCCESS');
+            window.qms.showToast('Ticket Called', `Token ${ticket.number} announced at station.`, 'success');
+
+            // Broadcast sound announce
+            window.qms.triggerVocalAnnouncement(ticket.number, counter.name);
+
+            // Reset service timer
+            timerSeconds = 0;
+            renderStationConsole();
+        };
+
+        function recall() {
+            const db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+            if (counter.currentTicket) {
+                window.qms.showToast('Recall Active', `Re-broadcasting sound announce for token ${counter.currentTicket}`, 'info');
+                window.qms.triggerVocalAnnouncement(counter.currentTicket, counter.name);
+            }
+        }
+
+        function complete() {
+            let db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+            
+            if (!counter.currentTicket) return;
+
+            const ticket = db.tickets.find(t => t.number === counter.currentTicket && t.branchId === counter.branchId && t.status === 'Serving');
+            if (ticket) {
+                ticket.status = 'Completed';
+                ticket.timeCompleted = new Date().toISOString();
+                window.qms.addLog(`Officer ${counter.agent} served ticket ${ticket.number} completely.`, counter.agent, counter.branchId, 'SUCCESS');
+            }
+
+            counter.currentTicket = '';
+            window.qms.saveDB(db);
+            window.qms.showToast('Serve Completed', 'Counter station is now available.', 'success');
+            
+            timerSeconds = 0;
+            renderStationConsole();
+        }
+
+        function hold() {
+            let db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+            
+            if (!counter.currentTicket) return;
+
+            const ticket = db.tickets.find(t => t.number === counter.currentTicket && t.branchId === counter.branchId && t.status === 'Serving');
+            if (ticket) {
+                ticket.status = 'Hold';
+                window.qms.addLog(`Officer ${counter.agent} put ticket ${ticket.number} on hold state.`, counter.agent, counter.branchId, 'WARNING');
+            }
+
+            counter.currentTicket = '';
+            window.qms.saveDB(db);
+            window.qms.showToast('Ticket Held', 'Ticket placed on active hold.', 'warning');
+            
+            timerSeconds = 0;
+            renderStationConsole();
+        }
+
+        function openTransfer() {
+            let db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+            if (!counter.currentTicket) {
+                window.qms.showToast('Action Blocked', 'No active ticket to transfer.', 'warning');
+                return;
+            }
+            
+            // Open transfer modal using standard Bootstrap
+            const modalEl = document.getElementById('modalTransferTicket');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        function noShow() {
+            let db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+            
+            if (!counter.currentTicket) return;
+
+            const ticket = db.tickets.find(t => t.number === counter.currentTicket && t.branchId === counter.branchId && t.status === 'Serving');
+            if (ticket) {
+                ticket.status = 'No Show';
+                window.qms.addLog(`Customer skipped: token ${ticket.number} marked No Show.`, counter.agent, counter.branchId, 'WARNING');
+            }
+
+            counter.currentTicket = '';
+            window.qms.saveDB(db);
+            window.qms.showToast('Marked No-Show', 'Missed ticket logged. Counter desk freed.', 'warning');
+            
+            timerSeconds = 0;
+            renderStationConsole();
+        }
+
+        function toggleOnline() {
+            let db = window.qms.getDB();
+            const counter = db.counters.find(c => c.id === selectedCounterId);
+            const switchEl = document.getElementById('counterOnlineSwitch');
+
+            counter.status = switchEl.checked ? 'Active' : 'Offline';
+            if (counter.status === 'Offline') {
+                counter.currentTicket = '';
+            }
+
+            window.qms.saveDB(db);
+            window.qms.addLog(`Counter logged status changed: ${counter.name} went ${counter.status.toLowerCase()}.`, counter.agent, counter.branchId, 'INFO');
+            window.qms.showToast('Station Status Changed', `Counter station logged ${counter.status.toLowerCase()}.`, 'info');
+            renderStationConsole();
+        }
+
+        /* --- SERVICE TIMER --- */
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerSeconds = 0;
+            
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+                const secs = String(timerSeconds % 60).padStart(2, '0');
+                
+                const timerEl = document.getElementById('serviceTimer');
+                if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            timerSeconds = 0;
+            const timerEl = document.getElementById('serviceTimer');
+            if (timerEl) timerEl.innerText = `00:00`;
+        }
+    </script>
+</body>
+</html>

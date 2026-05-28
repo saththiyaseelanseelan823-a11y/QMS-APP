@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMS - Security Gate QR Verification</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .scanner-viewport {
+            height: 300px;
+            background: #02050b;
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        .scanner-grid-box {
+            width: 180px;
+            height: 180px;
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            position: relative;
+            z-index: 2;
+        }
+        .scanner-laser-line {
+            width: 100%;
+            height: 4px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 3;
+            animation: laserSweep 2s infinite ease-in-out;
+        }
+        @keyframes laserSweep {
+            0% { top: 10%; }
+            50% { top: 90%; }
+            100% { top: 10%; }
+        }
+        .scanner-corner {
+            width: 25px;
+            height: 25px;
+            border: 4px solid var(--primary);
+            position: absolute;
+            z-index: 4;
+        }
+        .sc-tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .sc-tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+        .sc-bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+        .sc-br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+        
+        .verify-card-success {
+            border-color: var(--success);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+            animation: cardSuccessGlow 0.4s ease-out;
+        }
+        .verify-card-fail {
+            border-color: var(--danger);
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.25);
+            animation: cardFailGlow 0.4s ease-out;
+        }
+        @keyframes cardSuccessGlow {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes cardFailGlow {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Wallpaper Overlay for background effects -->
+    <div class="auth-bg-overlay"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="glass-nav py-3">
+        <div class="container-fluid container-lg d-flex justify-content-between align-items-center">
+            <a href="index.html" class="nav-brand-text text-decoration-none">
+                <i class="fas fa-layer-group"></i> QMS Ticket Validator
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-success bg-opacity-25 text-success px-3 py-2 fs-7">
+                    <i class="fas fa-shield-alt"></i> Entrance Gate Station
+                </span>
+                <a href="index.html" class="glass-btn py-2 px-3 small border-secondary">
+                    <i class="fas fa-home"></i> Back
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Grid -->
+    <main class="container py-5 animate-fade-in-up">
+        
+        <div class="row g-4">
+            <!-- Simulated Camera scanner card -->
+            <div class="col-lg-6">
+                <div class="glass-panel p-4 h-100">
+                    <h4 class="fw-bold mb-3"><i class="fas fa-qrcode text-primary me-2"></i> Simulated QR Validation</h4>
+                    <p class="text-muted small mb-4">Position the ticket QR token in the camera frame, or type the code number manually below.</p>
+                    
+                    <!-- Viewport wrapper -->
+                    <div class="scanner-viewport mb-4">
+                        <!-- Neon corners -->
+                        <div class="scanner-corner sc-tl"></div>
+                        <div class="scanner-corner sc-tr"></div>
+                        <div class="scanner-corner sc-bl"></div>
+                        <div class="scanner-corner sc-br"></div>
+                        
+                        <!-- Scanning Sweep Laser -->
+                        <div class="scanner-laser-line"></div>
+                        
+                        <!-- Box focus -->
+                        <div class="scanner-grid-box"></div>
+                        
+                        <!-- Camera mock text -->
+                        <div class="position-absolute bottom-0 mb-3 text-muted small" style="z-index:5;">
+                            <i class="fas fa-video text-danger"></i> Camera online - scanning...
+                        </div>
+                    </div>
+
+                    <!-- Manual input block -->
+                    <div class="glass-panel p-3">
+                        <label for="validationInput" class="form-label-custom">Manual Entry validation</label>
+                        <div class="d-flex gap-2">
+                            <div class="glass-input-group mb-0 flex-grow-1">
+                                <input type="text" id="validationInput" class="glass-input" placeholder="e.g. BC-103 or MC-206">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <button class="glass-btn glass-btn-primary py-2 px-4" id="btnVerify">
+                                Validate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validator verification result block -->
+            <div class="col-lg-6">
+                <div class="glass-panel p-4 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h4 class="fw-bold mb-4"><i class="fas fa-clipboard-check text-accent me-2"></i> Verification Logs</h4>
+                        
+                        <!-- Result container (rendered dynamically) -->
+                        <div id="verifyResultContainer">
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-shield-alt fs-1 mb-3"></i>
+                                <h5>Scan or Input Token Code</h5>
+                                <p class="small mb-0 mt-2">Waiting for token scanning input logs to audit.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footnote instruction -->
+                    <div class="p-3 glass-card border border-secondary border-opacity-10 text-muted small mt-4">
+                        <i class="fas fa-info-circle text-primary me-1"></i> Valid tickets show access clearance. Served, Cancelled, or No-Show tokens display warnings.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Core Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check auth (must be logged in as admin/staff to validate)
+            const sessionUser = localStorage.getItem('qms_logged_in_user');
+            if (!sessionUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Hook validator click
+            document.getElementById('btnVerify').onclick = verifyTicket;
+            
+            // Allow manual enter key trigger
+            document.getElementById('validationInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') verifyTicket();
+            });
+        });
+
+        function verifyTicket() {
+            const db = window.qms.getDB();
+            const val = document.getElementById('validationInput').value.trim().toUpperCase();
+            const container = document.getElementById('verifyResultContainer');
+
+            if (!val) {
+                window.qms.showToast('Validation Error', 'Please input a token number.', 'warning');
+                return;
+            }
+
+            // Search ticket
+            const ticket = db.tickets.find(t => t.number === val);
+
+            if (!ticket) {
+                // Beep fail sound
+                playAudioBeep(220, 0.25); // Low frequency beep
+                
+                container.innerHTML = `
+                    <div class="glass-card verify-card-fail p-4 text-center">
+                        <i class="fas fa-times-circle text-danger display-3 mb-3"></i>
+                        <h4 class="fw-bold text-danger">TICKET NOT FOUND</h4>
+                        <p class="text-muted mt-2 mb-0">Token <strong>${val}</strong> does not exist in the database. Entry denied.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const branch = db.branches.find(b => b.id === ticket.branchId);
+            const service = db.services.find(s => s.id === ticket.serviceId);
+
+            if (ticket.status === 'Waiting' || ticket.status === 'Serving') {
+                // Beep success sound
+                playAudioBeep(880, 0.12); // High frequency clear beep
+                
+                container.innerHTML = `
+                    <div class="glass-card verify-card-success p-4">
+                        <div class="text-center border-bottom pb-3 border-secondary border-opacity-10 mb-3">
+                            <i class="fas fa-check-circle text-success display-4 mb-2"></i>
+                            <h4 class="fw-bold text-success">ACCESS GRANTED</h4>
+                            <span class="badge bg-success bg-opacity-25 text-success px-3 py-1 fs-7 mt-2">Active Ticket Validated</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <small class="text-muted d-block small">Token Number</small>
+                                <strong class="text-white fs-4">${ticket.number}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block small">Queue Status</small>
+                                <strong class="text-accent fs-5">${ticket.status}</strong>
+                            </div>
+                            <div class="col-12 mt-2 pt-2 border-top border-secondary border-opacity-10">
+                                <small class="text-muted d-block small">Department Service</small>
+                                <strong class="text-white">${service ? service.name : 'Service'}</strong>
+                            </div>
+                            <div class="col-12 mt-1">
+                                <small class="text-muted d-block small">Branch Office Location</small>
+                                <strong class="text-white">${branch ? branch.name : 'Unknown'}</strong>
+                            </div>
+                            <div class="col-12 mt-1">
+                                <small class="text-muted d-block small">Customer Name</small>
+                                <strong class="text-white">${ticket.customerName}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Beep fail sound
+                playAudioBeep(220, 0.25);
+                
+                let reason = "This ticket was already served today.";
+                if (ticket.status === 'Cancelled') reason = "This ticket was cancelled by the customer.";
+                if (ticket.status === 'No Show') reason = "This ticket was marked as a no-show.";
+
+                container.innerHTML = `
+                    <div class="glass-card verify-card-fail p-4 text-center">
+                        <i class="fas fa-ban text-danger display-4 mb-3"></i>
+                        <h4 class="fw-bold text-danger">ACCESS DENIED</h4>
+                        <span class="badge bg-danger bg-opacity-25 text-danger px-3 py-1 fs-7 mt-2">Invalid Token Status</span>
+                        <p class="text-muted mt-3 mb-0">Token <strong>${ticket.number}</strong> status is <strong>${ticket.status}</strong>. <br>${reason}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Web Audio API Synthesis scanner beep! (Self contained sounds)
+        function playAudioBeep(frequency, duration) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                
+                gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime); // volume
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration); // fade
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio contexts blocked by browser.", e);
+            }
+        }
+    </script>
+</body>
+</html>

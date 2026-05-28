@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMS - Live Queue Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <!-- Wallpaper Overlay for background effects -->
+    <div class="auth-bg-overlay"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="glass-nav py-3">
+        <div class="container-fluid container-lg d-flex justify-content-between align-items-center">
+            <a href="index.html" class="nav-brand-text text-decoration-none">
+                <i class="fas fa-layer-group"></i> QMS Portal
+            </a>
+            
+            <div class="d-flex align-items-center gap-3">
+                <a href="login.html" class="glass-btn px-3 py-2 small" id="navLoginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <a href="register.html" class="glass-btn glass-btn-primary px-3 py-2 small" id="navRegisterBtn">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+                <button class="theme-switch-btn" title="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="container py-4" id="mainContainer">
+        
+        <!-- Welcome Hero Section -->
+        <header class="row mb-5 py-4 text-center text-lg-start align-items-center animate-fade-in-up">
+            <div class="col-lg-7">
+                <h1 class="display-5 fw-bold mb-3">Skip the Waiting Line. <br><span class="text-primary">Track Your Turn Live.</span></h1>
+                <p class="text-muted leading-relaxed fs-5">Select a branch, inspect current queue loading, book a ticket from your browser, or search your existing token's position in real time.</p>
+                <div class="d-flex flex-wrap justify-content-center justify-content-lg-start gap-3 mt-4">
+                    <a href="dashboard.html" class="glass-btn glass-btn-primary py-3 px-4">
+                        Book a Ticket Now <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    <button class="glass-btn py-3 px-4" id="btnToggleTvMode">
+                        <i class="fas fa-tv me-2 text-accent"></i> Enter Waiting Room Board
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-5 mt-4 mt-lg-0 text-center">
+                <!-- Live Queue Summary Panel -->
+                <div class="glass-panel p-4 pulse-glow-primary">
+                    <h5 class="fw-bold mb-3 border-bottom pb-2 border-secondary border-opacity-10">Live Stats Summary</h5>
+                    <div class="row text-center g-3">
+                        <div class="col-6">
+                            <h2 class="text-primary fw-extrabold mb-1" id="statWaitingTotal">12</h2>
+                            <small class="text-muted uppercase">Waiting Now</small>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="text-accent fw-extrabold mb-1" id="statAvgWait">14m</h2>
+                            <small class="text-muted uppercase">Avg Wait Time</small>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="text-success fw-extrabold mb-1" id="statCompletedTotal">28</h2>
+                            <small class="text-muted uppercase">Served Today</small>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="text-info fw-extrabold mb-1" id="statCountersActive">4/4</h2>
+                            <small class="text-muted uppercase">Active Counters</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search and Selection Grid -->
+        <section class="row mb-5 g-4">
+            <!-- Branch Selector and Search -->
+            <div class="col-lg-6">
+                <div class="glass-panel p-4 h-100">
+                    <h4 class="fw-bold mb-4"><i class="fas fa-search me-2 text-primary"></i> Find Your Ticket Position</h4>
+                    
+                    <div class="glass-input-group">
+                        <label for="branchSelector" class="form-label-custom">Select Branch Location</label>
+                        <select id="branchSelector" class="glass-input glass-select" required>
+                            <!-- Seed branches dynamically -->
+                        </select>
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+
+                    <div class="glass-input-group mb-4">
+                        <label for="ticketSearchInput" class="form-label-custom">Search Ticket Number</label>
+                        <input type="text" id="ticketSearchInput" class="glass-input" placeholder="e.g. A-103 or L-402">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+
+                    <button class="glass-btn glass-btn-accent w-100 py-3" id="btnSearchTicket">
+                        Search Queue Position <i class="fas fa-search ms-2"></i>
+                    </button>
+                    
+                    <!-- Search Results Box (Initially Hidden) -->
+                    <div id="searchResultBox" class="mt-4 p-3 glass-card d-none">
+                        <!-- Content loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Called Ticket Roster -->
+            <div class="col-lg-6">
+                <div class="glass-panel p-4 h-100">
+                    <h4 class="fw-bold mb-4"><i class="fas fa-broadcast-tower me-2 text-accent"></i> Counter Calling Display</h4>
+                    <div class="row g-3" id="liveCountersRoster">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Horizontal Scrollable Showcase Section -->
+        <section class="mb-5 px-0 px-md-3">
+            <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                <h3 class="fw-bold mb-0">
+                    <i class="fas fa-cubes me-2 text-primary animate-pulse"></i> Featured Services & Special Access
+                </h3>
+                <span class="badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill d-none d-md-inline-block">
+                    <i class="fas fa-mouse me-1"></i> Use Mouse Wheel to Scroll
+                </span>
+            </div>
+            
+            <div class="horizontal-scroll-container" id="hzScrollShowcase">
+                <!-- Card 1 -->
+                <div class="hz-scroll-card border border-primary border-opacity-10">
+                    <div class="hz-card-icon text-primary bg-primary bg-opacity-10">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Express Counter</h5>
+                        <p class="text-muted text-wrap">Fast-track service desk for single-item document requests under 5 minutes.</p>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 mt-2 align-self-start">Active</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="hz-scroll-card border border-accent border-opacity-10">
+                    <div class="hz-card-icon text-accent bg-accent bg-opacity-10">
+                        <i class="fas fa-wheelchair"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Assisted Priority</h5>
+                        <p class="text-muted text-wrap">Dedicated service row and lounge for senior citizens and disabled visitors.</p>
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 mt-2 align-self-start">Special Priority</span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="hz-scroll-card border border-info border-opacity-10">
+                    <div class="hz-card-icon text-info bg-info bg-opacity-10">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Mobile QR Tickets</h5>
+                        <p class="text-muted text-wrap">Scan physical ticket kiosk receipts to load real-time status directly on mobile phone.</p>
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 mt-2 align-self-start">Fully Digital</span>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="hz-scroll-card border border-warning border-opacity-10">
+                    <div class="hz-card-icon text-warning bg-warning bg-opacity-10">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Vocal TTS Callouts</h5>
+                        <p class="text-muted text-wrap">Automatic browser synthesized high-fidelity audio announcement of called tokens.</p>
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 mt-2 align-self-start">Sound Enabled</span>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="hz-scroll-card border border-success border-opacity-10">
+                    <div class="hz-card-icon text-success bg-success bg-opacity-10">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Smart Analytics</h5>
+                        <p class="text-muted text-wrap">Real-time statistics dashboard reflecting wait loads and throughput timings.</p>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 mt-2 align-self-start">Live Insights</span>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="hz-scroll-card border border-primary border-opacity-10">
+                    <div class="hz-card-icon text-primary bg-primary bg-opacity-10">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="hz-card-content">
+                        <h5 class="fw-bold text-white mb-1">Audit Log Streams</h5>
+                        <p class="text-muted text-wrap">Comprehensive tracking system for security audits, staff changes, and ticket status.</p>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 mt-2 align-self-start">Secure Logs</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Service cards detailing waiting queue speeds -->
+        <section class="mb-5">
+            <h3 class="fw-bold mb-4 text-center text-lg-start"><i class="fas fa-concierge-bell me-2 text-primary"></i> Your app can manage queues for:</h3>
+            <div class="row g-4" id="servicesGrid">
+                <!-- Birth Certificate -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-1">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-baby"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Birth Certificate</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: BC</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">15m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Marriage Certificate -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-2">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-ring"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Marriage Certificate</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: MC</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">20m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Death Certificate -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-3">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-book-dead"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Death Certificate</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: DC</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">10m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue License -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-4">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Revenue License</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: RL</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">8m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Samurdhi Services -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-5">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-hand-holding-heart"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Samurdhi Services</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: SS</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">25m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Land Services -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-6">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Land Services</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: LS</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">30m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NIC Services -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-7">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">NIC Services</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: NIC</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">18m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Permit Requests -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-8">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-file-signature"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Permit Requests</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: PR</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">12m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grama Niladhari Meetings -->
+                <div class="col-sm-6 col-lg-4 animate-fade-in-up" data-service-id="sv-9">
+                    <div class="glass-card text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Grama Niladhari Meetings</h5>
+                        <span class="badge bg-secondary bg-opacity-25 text-primary px-3 py-1 mt-2">Code: GN</span>
+                        <div class="row mt-4 pt-3 border-top border-secondary border-opacity-10">
+                            <div class="col-6 border-end border-secondary border-opacity-10">
+                                <h4 class="fw-bold mb-0 text-accent" data-stat="waiting">0</h4>
+                                <small class="text-muted small">In Line</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="fw-bold mb-0 text-muted" data-stat="wait">15m</h4>
+                                <small class="text-muted small">Wait Time</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- TV Display Mode Overlay (FullScreen Waiting Room TV Screen) -->
+    <div id="tvViewOverlay" class="tv-layout d-none position-fixed top-0 start-0 w-100 h-100 z-3 overflow-auto">
+        <div class="tv-grid-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="fs-1 fw-extrabold text-primary"><i class="fas fa-layer-group"></i> QMS BOARD</div>
+                <div class="badge bg-secondary px-3 py-2 text-uppercase fs-6" id="tvBranchName">Downtown Main</div>
+            </div>
+            <div class="d-flex align-items-center gap-4">
+                <div class="sound-panel-status d-flex align-items-center gap-2">
+                    <i class="fas fa-volume-up text-primary"></i> Voice: 
+                    <span class="text-success fw-bold" id="tvVoiceStatus">Ready</span>
+                </div>
+                <div class="fs-4 text-muted" id="tvClock">19:46</div>
+                <button class="glass-btn py-2 px-3 border-danger text-danger" id="btnCloseTvMode">
+                    Exit <i class="fas fa-times ms-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="container-fluid py-5">
+            <div class="row g-4">
+                <!-- Now Serving Large Screen -->
+                <div class="col-lg-8">
+                    <div class="glass-panel p-5 text-center h-100 d-flex flex-column justify-content-center align-items-center">
+                        <span class="text-muted text-uppercase fw-bold tracking-widest fs-4 mb-2">Currently Serving</span>
+                        <h1 class="tv-main-num pulse-glow-primary py-4 px-5 rounded-4 border border-secondary border-opacity-10" id="tvCurrentNumber">A-102</h1>
+                        <span class="fs-2 fw-semibold text-accent mt-4" id="tvCurrentCounter">Counter 1</span>
+                    </div>
+                </div>
+
+                <!-- Next Counter Roster Sidebar -->
+                <div class="col-lg-4">
+                    <div class="glass-panel p-4 h-100">
+                        <h3 class="fw-bold mb-4 text-center border-bottom pb-2 border-secondary border-opacity-10">Queue Counters</h3>
+                        <div class="d-flex flex-column gap-3" id="tvCountersList">
+                            <!-- Dynamically loaded -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-5 g-4">
+                <div class="col-12 text-center text-muted">
+                    <p class="mb-0 fs-5"><i class="fas fa-info-circle text-primary me-2"></i> Voice calls are simulated using SpeechSynthesis. Please listen closely to announcements.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Javascript Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check auth navigation links
+            const loggedInUser = localStorage.getItem('qms_logged_in_user');
+            if (loggedInUser) {
+                const user = JSON.parse(loggedInUser);
+                const loginBtn = document.getElementById('navLoginBtn');
+                const registerBtn = document.getElementById('navRegisterBtn');
+                if (loginBtn && registerBtn) {
+                    loginBtn.innerHTML = `<i class="fas fa-user-circle"></i> Dashboard`;
+                    loginBtn.href = user.role === 'admin' ? 'admin.html' : 'dashboard.html';
+                    registerBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Logout`;
+                    registerBtn.href = '#';
+                    registerBtn.className = 'glass-btn border-danger text-danger px-3 py-2 small';
+                    registerBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        localStorage.removeItem('qms_logged_in_user');
+                        window.location.reload();
+                    });
+                }
+            }
+
+            // Init values
+            initPortalUI();
+            
+            // Watch local storage state changes
+            window.addEventListener('qmsStateUpdated', () => {
+                initPortalUI();
+            });
+
+            // TV Mode Bindings
+            const btnToggleTvMode = document.getElementById('btnToggleTvMode');
+            const btnCloseTvMode = document.getElementById('btnCloseTvMode');
+            const tvViewOverlay = document.getElementById('tvViewOverlay');
+
+            btnToggleTvMode.addEventListener('click', () => {
+                tvViewOverlay.classList.remove('d-none');
+                document.body.style.overflow = 'hidden';
+                updateTvDisplay();
+            });
+
+            btnCloseTvMode.addEventListener('click', () => {
+                tvViewOverlay.classList.add('d-none');
+                document.body.style.overflow = 'auto';
+            });
+
+            // Tick Clock on TV Mode
+            setInterval(() => {
+                const clock = document.getElementById('tvClock');
+                if (clock) {
+                    const now = new Date();
+                    clock.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+            }, 1000);
+        });
+
+        function initPortalUI() {
+            const db = window.qms.getDB();
+            
+            // Fill Branch Dropdown
+            const branchSelector = document.getElementById('branchSelector');
+            if (branchSelector) {
+                const selectedVal = branchSelector.value || db.branches[0].id;
+                branchSelector.innerHTML = db.branches.map(br => 
+                    `<option value="${br.id}" ${br.id === selectedVal ? 'selected' : ''}>${br.name}</option>`
+                ).join('');
+                
+                branchSelector.addEventListener('change', () => {
+                    renderStats();
+                    renderCounters();
+                    renderServices();
+                });
+            }
+
+            renderStats();
+            renderCounters();
+            renderServices();
+
+            // Setup search button click
+            document.getElementById('btnSearchTicket').addEventListener('click', searchTicket);
+        }
+
+        function renderStats() {
+            const db = window.qms.getDB();
+            const branchId = document.getElementById('branchSelector').value;
+            
+            const tickets = db.tickets.filter(t => t.branchId === branchId);
+            const waitingCount = tickets.filter(t => t.status === 'Waiting').length;
+            const completedCount = tickets.filter(t => t.status === 'Completed').length;
+            
+            document.getElementById('statWaitingTotal').innerText = waitingCount;
+            document.getElementById('statCompletedTotal').innerText = completedCount;
+            
+            // Sum wait averages
+            let avgWait = 0;
+            if (waitingCount > 0) {
+                // simple math
+                avgWait = Math.round(db.services.reduce((acc, s) => acc + s.avgWait, 0) / db.services.length * waitingCount * 0.4);
+            } else {
+                avgWait = 0;
+            }
+            document.getElementById('statAvgWait').innerText = avgWait > 0 ? `${avgWait}m` : '0m';
+        }
+
+        function renderCounters() {
+            const db = window.qms.getDB();
+            const roster = document.getElementById('liveCountersRoster');
+            
+            roster.innerHTML = db.counters.map(c => {
+                const service = db.services.find(s => s.id === c.activeService);
+                const currentNum = c.currentTicket || 'Offline';
+                return `
+                    <div class="col-sm-6">
+                        <div class="glass-card text-center py-3">
+                            <small class="text-muted fw-bold text-uppercase d-block">${c.name}</small>
+                            <h3 class="text-primary my-2 pulse-glow-primary py-1 px-2 rounded d-inline-block">${currentNum}</h3>
+                            <div class="small mt-1 text-muted">Counter Officer: <strong>${c.agent}</strong></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderServices() {
+            const db = window.qms.getDB();
+            const branchId = document.getElementById('branchSelector').value;
+
+            db.services.forEach(s => {
+                const card = document.querySelector(`[data-service-id="${s.id}"]`);
+                if (card) {
+                    const waiting = db.tickets.filter(t => t.branchId === branchId && t.serviceId === s.id && t.status === 'Waiting').length;
+                    const waitingEl = card.querySelector('[data-stat="waiting"]');
+                    const waitEl = card.querySelector('[data-stat="wait"]');
+                    
+                    if (waitingEl) waitingEl.innerText = waiting;
+                    if (waitEl) waitEl.innerText = `${s.avgWait}m`;
+                }
+            });
+        }
+
+        function searchTicket() {
+            const db = window.qms.getDB();
+            const inputVal = document.getElementById('ticketSearchInput').value.trim().toUpperCase();
+            const resultBox = document.getElementById('searchResultBox');
+            
+            if (!inputVal) {
+                window.qms.showToast('Search Failed', 'Please input a ticket number.', 'warning');
+                return;
+            }
+
+            const ticket = db.tickets.find(t => t.number === inputVal);
+            
+            resultBox.classList.remove('d-none');
+            
+            if (!ticket) {
+                resultBox.innerHTML = `
+                    <div class="text-center text-danger py-2">
+                        <i class="fas fa-times-circle fs-3 mb-2"></i>
+                        <div class="fw-bold">Ticket Not Found</div>
+                        <div class="small text-muted">Verify the code and try again.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const branch = db.branches.find(b => b.id === ticket.branchId);
+            const service = db.services.find(s => s.id === ticket.serviceId);
+
+            if (ticket.status === 'Completed') {
+                resultBox.innerHTML = `
+                    <div class="text-center py-2">
+                        <i class="fas fa-check-circle text-success fs-3 mb-2"></i>
+                        <div class="fw-bold text-success">Ticket Served</div>
+                        <div class="small text-muted mt-2">Ticket <strong>${ticket.number}</strong> was successfully completed today.</div>
+                    </div>
+                `;
+            } else if (ticket.status === 'Serving') {
+                resultBox.innerHTML = `
+                    <div class="text-center py-2">
+                        <i class="fas fa-bell text-info fs-3 mb-2 pulse-glow-primary d-inline-block p-2 rounded-circle"></i>
+                        <div class="fw-bold text-info">YOUR TURN NOW!</div>
+                        <div class="small mt-2">Please proceed directly to <strong>${ticket.counter || 'Counter Panel'}</strong> immediately.</div>
+                    </div>
+                `;
+            } else if (ticket.status === 'Waiting') {
+                // Calculate position: respect priority queue weights
+                const serviceTicketsWaiting = window.qms.sortTickets(db.tickets.filter(t => 
+                    t.branchId === ticket.branchId && 
+                    t.serviceId === ticket.serviceId && 
+                    t.status === 'Waiting'
+                ));
+                
+                const position = serviceTicketsWaiting.findIndex(t => t.id === ticket.id) + 1;
+                const estWait = position * service.avgWait;
+
+                let priorityBadge = "";
+                const pGroup = ticket.priorityGroup || 'Regular';
+                if (pGroup !== 'Regular') {
+                    let pColor = "var(--text-muted)";
+                    let pIcon = "fa-user-shield";
+                    if (pGroup === 'Emergency') { pColor = "#ef4444"; pIcon = "fa-exclamation-triangle"; }
+                    else if (pGroup === 'Disabled') { pColor = "#f59e0b"; pIcon = "fa-wheelchair"; }
+                    else if (pGroup === 'Elderly') { pColor = "#06b6d4"; pIcon = "fa-blind"; }
+                    else if (pGroup === 'VIP') { pColor = "#8b5cf6"; pIcon = "fa-crown"; }
+                    priorityBadge = `<span class="badge ms-2" style="background: rgba(255,255,255,0.05); color: ${pColor}; border: 1px solid ${pColor}50; font-size: 0.75rem;"><i class="fas ${pIcon} me-1"></i>${pGroup} Priority</span>`;
+                }
+
+                resultBox.innerHTML = `
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning bg-opacity-25 text-warning px-3 py-1">Active - Waiting</span>
+                                ${priorityBadge}
+                            </div>
+                            <span class="text-muted small">ID: ${ticket.number}</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <small class="text-muted d-block small">Queue Position</small>
+                                <span class="fs-4 fw-bold text-primary"># ${position} in line</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block small">Est. Waiting Time</small>
+                                <span class="fs-4 fw-bold text-accent">~ ${estWait} minutes</span>
+                            </div>
+                            <div class="col-12 mt-2 pt-2 border-top border-secondary border-opacity-10 text-muted small">
+                                <div><i class="fas fa-map-marker-alt me-1 text-primary"></i> ${branch.name}</div>
+                                <div class="mt-1"><i class="fas fa-concierge-bell me-1 text-primary"></i> Service: ${service.name}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultBox.innerHTML = `
+                    <div class="text-center py-2">
+                        <i class="fas fa-ban text-danger fs-3 mb-2"></i>
+                        <div class="fw-bold text-danger">No Show / Cancelled</div>
+                        <div class="small text-muted mt-2">This ticket was cancelled or marked as no show. Please register a new ticket.</div>
+                    </div>
+                `;
+            }
+        }
+
+        function updateTvDisplay() {
+            const db = window.qms.getDB();
+            const branchId = document.getElementById('branchSelector').value;
+            const branch = db.branches.find(b => b.id === branchId);
+            
+            document.getElementById('tvBranchName').innerText = branch ? branch.name : 'Main HQ';
+            
+            const servingTickets = db.tickets.filter(t => t.branchId === branchId && t.status === 'Serving');
+            
+            if (servingTickets.length > 0) {
+                const primaryTicket = servingTickets[0];
+                document.getElementById('tvCurrentNumber').innerText = primaryTicket.number;
+                document.getElementById('tvCurrentCounter').innerText = primaryTicket.counter || 'Counter';
+            } else {
+                document.getElementById('tvCurrentNumber').innerText = '---';
+                document.getElementById('tvCurrentCounter').innerText = 'Waiting for calls...';
+            }
+
+            // Fill side counter lists
+            const tvList = document.getElementById('tvCountersList');
+            tvList.innerHTML = db.counters.map(c => {
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-3 glass-card mb-2">
+                        <div class="fw-bold fs-4 text-muted">${c.name}</div>
+                        <div class="tv-side-num fw-extrabold text-primary">${c.currentTicket || '---'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
